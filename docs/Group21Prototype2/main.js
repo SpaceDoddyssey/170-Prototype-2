@@ -1,7 +1,7 @@
 title = "Prototype 2";
 
 description = `
-[Tap] Multiple jumps
+[Tap to Snake]
 `;
 
 characters = [
