@@ -1798,14 +1798,14 @@ l l l
 
     var keyboard = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        get isPressed () { return isPressed$2; },
+        clearJustPressed: clearJustPressed$2,
+        get code () { return code; },
+        codes: codes,
+        init: init$5,
         get isJustPressed () { return isJustPressed$2; },
         get isJustReleased () { return isJustReleased$2; },
-        codes: codes,
-        get code () { return code; },
-        init: init$5,
-        update: update$6,
-        clearJustPressed: clearJustPressed$2
+        get isPressed () { return isPressed$2; },
+        update: update$6
     });
 
     class Random {
@@ -1987,13 +1987,13 @@ l l l
 
     var pointer = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        pos: pos$1,
-        get isPressed () { return isPressed$1; },
+        clearJustPressed: clearJustPressed$1,
+        init: init$4,
         get isJustPressed () { return isJustPressed$1; },
         get isJustReleased () { return isJustReleased$1; },
-        init: init$4,
-        update: update$5,
-        clearJustPressed: clearJustPressed$1
+        get isPressed () { return isPressed$1; },
+        pos: pos$1,
+        update: update$5
     });
 
     /** A pressed position of mouse or touch screen. */
@@ -2038,14 +2038,14 @@ l l l
 
     var input = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        get pos () { return pos; },
-        get isPressed () { return isPressed; },
+        clearJustPressed: clearJustPressed,
+        init: init$3,
         get isJustPressed () { return isJustPressed; },
         get isJustReleased () { return isJustReleased; },
-        init: init$3,
-        update: update$4,
-        clearJustPressed: clearJustPressed,
-        set: set
+        get isPressed () { return isPressed; },
+        get pos () { return pos; },
+        set: set,
+        update: update$4
     });
 
     let _init$1;
