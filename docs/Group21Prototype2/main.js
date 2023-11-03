@@ -56,13 +56,16 @@ let chicks;
 let fallingChicks;
 /** @type {{pos: Vector, width: number, hasChick: boolean}[]} */
 let floors;
-let nextFloorDist;
+
 /** @type {{pos: Vector, vx: number}[]} */
 let bullets;
-let nextBulletDist;
-let isFalling;
-
+/** @type {{pos: Vector, vx: number}[]} */
 let spawnedChicks;
+
+let nextBulletDist;
+let nextChickDist;
+let isFalling;
+let nextFloorDist;
 
 function update() {
   //Initializer function
@@ -78,6 +81,7 @@ function update() {
     nextFloorDist = 0;
     bullets = [];
     nextBulletDist = 99;
+    nextChickDist = 80;
     isFalling = false;
   }
 
@@ -88,8 +92,8 @@ function update() {
       play("jump");
       play("hit");
       //bird.vy = -2 * sqrt(difficulty);
-      chicks.shift();
-      fallingChicks.push({ pos: vec(bird.posHistory[2]), vy: 0 });
+      // chicks.shift();
+      // fallingChicks.push({ pos: vec(bird.posHistory[2]), vy: 0 });
     }
 
     //Moving the bird when in the air
@@ -162,26 +166,45 @@ function update() {
     */
     return f.pos.x < -f.width / 2;
   });
-  if (Math.random() < 0.01) {
-    color("black");
-    console.log("Triggered");
-    const c = char("c", VIEW_X + 50, rnd(10, VIEW_Y - 10)).isColliding.char;
-    spawnedChicks.push(c);
-    console.log(spawnedChicks);
-    //Pick it up if you touch it (and you have < 30)
+  // if (Math.random() < 0.001) {
+  //   color("black");
+  //   console.log("Triggered");
+  //   const c = char("c", VIEW_X + 50, rnd(10, VIEW_Y - 10)).isColliding.char;
+  //   spawnedChicks.push(c);
+  //   console.log(spawnedChicks);
+  //   //Pick it up if you touch it (and you have < 30)
+  //   if (c.a || c.b) {
+  //     if (chicks.length < 30) {
+  //       chicks.push({ index: 0, targetIndex: 0 });
+  //     }
+  //     play("select");
+
+  //     //
+  //   }
+  // }
+
+  nextChickDist -= scoreModifier;
+  if (nextChickDist < 0) {
+    spawnedChicks.push({ pos: vec(203, rndi(10, 90)), vx: rnd(1, difficulty) * 0.3 });
+    nextChickDist += rnd(50, 80) / sqrt(difficulty);
+  }
+  color("black");
+  //cleaning up chicks  and handling chick collision, and moving
+  remove(spawnedChicks, (chick) => {
+    //update bullet position by velocity
+    chick.pos.x -= chick.vx + scoreModifier;
+
+    const c = char("c", chick.pos).isColliding.char;
     if (c.a || c.b) {
       if (chicks.length < 30) {
-        chicks.push({ index: 0, targetIndex: 0 });
+          chicks.push({ index: 0, targetIndex: 0 });
       }
       play("select");
-
-      //
+      return true;
     }
-  }
-  remove(spawnedChicks, (chick) => {
-    //Move chick to the left
-    //remove chick if its off screen
+    return chick.pos.x < -3;
   });
+ 
 
   //(?) Causes chicks to fall further behind as you speed up?
   bird.posHistory.forEach((p) => {
