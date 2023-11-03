@@ -6,29 +6,25 @@ description = `
 
 characters = [
   `
- bbbb
-bbblwb
-bbbbyy
-  bb
-bbbb
-  y y
+ggGbG
+ggGGG
+ggGGG
+ggGGG
+ggGbG
 `,
   `
- bbbb
-bbblwb
-bbbbyy
-bbbb
- bbb
- y y
+ggGbG
+ggGGG
+ggGGGr
+ggGGG
+ggGbG
 `,
   `
-
-
- yy
- yyl
-yyyy
- yy
- y
+gg
+gg
+gg
+gg
+gg
 `,
   `
  rrr l
@@ -200,6 +196,7 @@ function update() {
           chicks.push({ index: 0, targetIndex: 0 });
       }
       play("select");
+      addScore(chicks.length, chick.pos.x, chick.pos.y - 5);
       return true;
     }
     return chick.pos.x < -3;
@@ -282,6 +279,7 @@ function update() {
   });
   color("black");
   char(bird.vy < 0 ? "b" : "a", bird.pos);
+
   if (bird.pos.y > VIEW_Y - 1) {
     play("explosion");
     end();
