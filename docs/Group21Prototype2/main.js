@@ -203,9 +203,9 @@ function update() {
   });
  
 
-  //(?) Causes chicks to fall further behind as you speed up?
+  //Causes chicks to follow behind you
   bird.posHistory.forEach((p) => {
-    p.x -= scoreModifier;
+    p.x -= .65;
   });
 
   //Add birds position to vector history, dont let history be longer than 99 entries
