@@ -20,11 +20,10 @@ ggGGG
 ggGbG
 `,
   `
-gg
-gg
-gg
-gg
-gg
+ gg 
+gggg
+gggg
+ gg
 `,
   `
  rrr l
@@ -44,7 +43,7 @@ options = {
   seed: 50,
 };
 
-/** @type {{pos: Vector, vy: number, posHistory: Vector[]}} */
+/** @type {{pos: Vector, turnCenter: Vector, vy: number, posHistory: Vector[], angle: number}} */
 let snakeHead;
 /** @type {{index: number, targetIndex: number}[]} */
 let snakeTails;
@@ -54,20 +53,22 @@ let fallingsnakeTails;
 /** @type {{pos: Vector, vx: number}[]} */
 let bullets;
 /** @type {{pos: Vector, vx: number}[]} */
-let spawnedsnakeTails;
+let spawnedFood;
 
 let nextBulletDist;
 let nextFoodDist;
 
 let movingUp = false;
+let angularSpeed = 0.04;
+let radius = 16;
 
 function update() {
   //Initializer function
   if (!ticks) {
-    snakeHead = { pos: vec(64, 32), vy: 0, posHistory: [] };
+    snakeHead = { pos: vec(64, 32), turnCenter: vec(64+radius, 32), vy: 0, posHistory: [], angle: 0 };
     snakeTails = [];
     fallingsnakeTails = [];
-    spawnedsnakeTails = [];
+    spawnedFood = [];
     bullets = [];
     nextBulletDist = 99;
     nextFoodDist = 80;
@@ -75,37 +76,39 @@ function update() {
 
   const scoreModifier = sqrt(difficulty);
 
-  if (input.isJustPressed) {
-    movingUp = !movingUp;
-  }
+  //Flip the turning direction of the snake when you press the button
+  if (input.isJustPressed) { 
+    const deltaX = snakeHead.pos.x - snakeHead.turnCenter.x;
+    const deltaY = snakeHead.pos.y - snakeHead.turnCenter.y;
+  
+    const newTurnCenterX = snakeHead.pos.x + deltaX;
+    const newTurnCenterY = snakeHead.pos.y + deltaY;
+  
+    snakeHead.turnCenter.x = newTurnCenterX;
+    snakeHead.turnCenter.y = newTurnCenterY;
 
-  //Moving the snakeHead 
-    const MOVEMENTS_PER_FRAME = 10;
-    const pp = vec(snakeHead.pos);
-    snakeHead.vy = (movingUp ? -0.8 : 0.8) * difficulty;
-    snakeHead.pos.y += snakeHead.vy;
-    const op = vec(snakeHead.pos).sub(pp).div(MOVEMENTS_PER_FRAME);
-    color("white");
-    //Discrete movements for collision checking
-    times(MOVEMENTS_PER_FRAME, () => {
-      pp.add(op);
-      box(pp, 6);
-    });
-    color("black");
+    // Reverse the angle to keep snakeHead.pos in the same place
+    snakeHead.angle = Math.atan2(snakeHead.pos.y - snakeHead.turnCenter.y, snakeHead.pos.x - snakeHead.turnCenter.x);
+    angularSpeed = -angularSpeed;
+  }
+  
+  snakeHead.angle += angularSpeed;
+  snakeHead.pos.x = snakeHead.turnCenter.x + radius * Math.cos(snakeHead.angle);
+  snakeHead.pos.y = snakeHead.turnCenter.y + radius * Math.sin(snakeHead.angle);
+
 
   //Select correct sprite, jumping = b or falling = a
   char(snakeHead.vy < 0 ? "b" : "a", snakeHead.pos);
 
   nextFoodDist -= scoreModifier;
   if (nextFoodDist < 0) {
-    spawnedsnakeTails.push({ pos: vec(203, rndi(10, 90)), vx: rnd(1, difficulty) * 0.3 });
+    spawnedFood.push({ pos: vec(rndi(10, 140), rndi(10, 140)), vx: rnd(1, difficulty) * 0.3 });
     nextFoodDist += rnd(50, 80) / sqrt(difficulty);
   }
   color("black");
-  //cleaning up snakeTails and moving
-  remove(spawnedsnakeTails, (food) => {
+  // cleaning up snakeTails and moving
+  remove(spawnedFood, (food) => {
     //update bullet position by velocity
-    food.pos.x -= food.vx + scoreModifier;
 
     const c = char("c", food.pos).isColliding.char;
     if (c.a || c.b) {
@@ -118,12 +121,6 @@ function update() {
     }
     return food.pos.x < -3;
   });
- 
-
-  //Causes snakeTails to follow behind you
-  snakeHead.posHistory.forEach((p) => {
-    p.x -= .65;
-  });
 
   //Add snakeHeads position to vector history, dont let history be longer than 99 entries
   snakeHead.posHistory.unshift(vec(snakeHead.pos));
@@ -133,11 +130,11 @@ function update() {
   color("transparent");
 
   //Bullet spawning
-  nextBulletDist -= scoreModifier;
-  if (nextBulletDist < 0) {
-    bullets.push({ pos: vec(203, rndi(10, 90)), vx: rnd(1, difficulty) * 0.3 });
-    nextBulletDist += rnd(50, 80) / sqrt(difficulty);
-  }
+  // nextBulletDist -= scoreModifier;
+  // if (nextBulletDist < 0) {
+  //   bullets.push({ pos: vec(203, rndi(10, 90)), vx: rnd(1, difficulty) * 0.3 });
+  //   nextBulletDist += rnd(50, 80) / sqrt(difficulty);
+  // }
   color("black");
   //cleaning up bullets and handling bullet collision, and moving
   let isHit = false;
