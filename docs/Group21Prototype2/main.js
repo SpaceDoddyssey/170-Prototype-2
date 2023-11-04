@@ -58,7 +58,8 @@ let spawnedsnakeTails;
 
 let nextBulletDist;
 let nextFoodDist;
-let isFalling;
+
+let movingUp = false;
 
 function update() {
   //Initializer function
@@ -70,15 +71,18 @@ function update() {
     bullets = [];
     nextBulletDist = 99;
     nextFoodDist = 80;
-    isFalling = false;
   }
 
   const scoreModifier = sqrt(difficulty);
 
+  if (input.isJustPressed) {
+    movingUp = !movingUp;
+  }
+
   //Moving the snakeHead 
     const MOVEMENTS_PER_FRAME = 10;
     const pp = vec(snakeHead.pos);
-    snakeHead.vy = (input.isPressed ? -0.8 : 0.8) * difficulty;
+    snakeHead.vy = (movingUp ? -0.8 : 0.8) * difficulty;
     snakeHead.pos.y += snakeHead.vy;
     const op = vec(snakeHead.pos).sub(pp).div(MOVEMENTS_PER_FRAME);
     color("white");
@@ -136,39 +140,38 @@ function update() {
   }
   color("black");
   //cleaning up bullets and handling bullet collision, and moving
-  remove(bullets, (b) => {
+  let isHit = false;
+  remove(bullets, (bullet) => {
     //update bullet position by velocity
-    b.pos.x -= b.vx + scoreModifier;
+    bullet.pos.x -= bullet.vx + scoreModifier;
 
-    const c = char("d", b.pos).isColliding.char;
+    const c = char("d", bullet.pos).isColliding.char;
     if (c.a || c.b) {
       play("explosion");
       if (snakeTails.length > 0) {
-        isFalling = true;
+        isHit = true;
         snakeHead.vy = 3 * sqrt(difficulty);
       } else {
         end();
       }
       return true;
     }
-    return b.pos.x < -3;
+    return bullet.pos.x < -3;
   });
   color("black");
-  let isHit = isFalling;
-  isFalling = false;
 
-  remove(snakeTails, (c, i) => {
-    c.targetIndex = 3 * (i + 1);
-    c.index += (c.targetIndex - c.index) * 0.05;
-    const p = snakeHead.posHistory[floor(c.index)];
+  remove(snakeTails, (tail, i) => {
+    tail.targetIndex = 3 * (i + 1);
+    tail.index += (tail.targetIndex - tail.index) * 0.05;
+    const p = snakeHead.posHistory[floor(tail.index)];
     const cl = char("c", p).isColliding;
-    //If a food gets hit by a bullet
+    //If a tail segment gets hit by a bullet
     if (cl.char.d) {
       play("powerUp");
       isHit = true;
     }
 
-    //Add food to fallingsnakeTails array
+    //Add tail segment to fallingsnakeTails array
     if (isHit) {
       console.log("Triggered");
       fallingsnakeTails.push({ pos: vec(p), vy: 0 });
@@ -177,11 +180,11 @@ function update() {
   });
 
   //Remove food when they fall off screen
-  remove(fallingsnakeTails, (f) => {
-    f.vy += 0.3 * difficulty;
-    f.pos.y += f.vy;
-    char("c", f.pos, { mirror: { y: -1 } });
-    return f.pos.y > 103;
+  remove(fallingsnakeTails, (tail) => {
+    tail.vy += 0.3 * difficulty;
+    tail.pos.y += tail.vy;
+    char("c", tail.pos, { mirror: { y: -1 } });
+    return tail.pos.y > 103;
   });
   color("black");
   char(snakeHead.vy < 0 ? "b" : "a", snakeHead.pos);
