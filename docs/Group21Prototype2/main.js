@@ -44,183 +44,89 @@ options = {
   seed: 50,
 };
 
-/** @type {{pos: Vector, vy: number, posHistory: Vector[], isJumping: boolean}} */
-let bird;
+/** @type {{pos: Vector, vy: number, posHistory: Vector[]}} */
+let snakeHead;
 /** @type {{index: number, targetIndex: number}[]} */
-let chicks;
+let snakeTails;
 /** @type {{pos: Vector, vy: number}[]} */
-let fallingChicks;
-/** @type {{pos: Vector, width: number, hasChick: boolean}[]} */
-let floors;
+let fallingsnakeTails;
 
 /** @type {{pos: Vector, vx: number}[]} */
 let bullets;
 /** @type {{pos: Vector, vx: number}[]} */
-let spawnedChicks;
+let spawnedsnakeTails;
 
 let nextBulletDist;
-let nextChickDist;
+let nextFoodDist;
 let isFalling;
-let nextFloorDist;
 
 function update() {
   //Initializer function
   if (!ticks) {
-    bird = { pos: vec(64, 32), vy: 0, posHistory: [], isJumping: true };
-    chicks = [];
-    fallingChicks = [];
-    spawnedChicks = [];
-    floors = [
-      { pos: vec(70, 70), width: 90, hasChick: false },
-      { pos: vec(150, 50), width: 90, hasChick: true },
-    ];
-    nextFloorDist = 0;
+    snakeHead = { pos: vec(64, 32), vy: 0, posHistory: [] };
+    snakeTails = [];
+    fallingsnakeTails = [];
+    spawnedsnakeTails = [];
     bullets = [];
     nextBulletDist = 99;
-    nextChickDist = 80;
+    nextFoodDist = 80;
     isFalling = false;
   }
 
   const scoreModifier = sqrt(difficulty);
-  if (bird.isJumping) {
-    //Double jump
-    if (chicks.length > 0 && input.isJustPressed) {
-      play("jump");
-      play("hit");
-      //bird.vy = -2 * sqrt(difficulty);
-      // chicks.shift();
-      // fallingChicks.push({ pos: vec(bird.posHistory[2]), vy: 0 });
-    }
 
-    //Moving the bird when in the air
+  //Moving the snakeHead 
     const MOVEMENTS_PER_FRAME = 10;
-    const pp = vec(bird.pos);
-    //bird.vy += (input.isPressed ? -0.2 : 0.2) * difficulty;
-    bird.vy = (input.isPressed ? -0.8 : 0.8) * difficulty;
-    bird.pos.y += bird.vy;
-    const op = vec(bird.pos).sub(pp).div(MOVEMENTS_PER_FRAME);
+    const pp = vec(snakeHead.pos);
+    snakeHead.vy = (input.isPressed ? -0.8 : 0.8) * difficulty;
+    snakeHead.pos.y += snakeHead.vy;
+    const op = vec(snakeHead.pos).sub(pp).div(MOVEMENTS_PER_FRAME);
     color("white");
     //Discrete movements for collision checking
     times(MOVEMENTS_PER_FRAME, () => {
       pp.add(op);
       box(pp, 6);
     });
-  } else {
-    //Make the player jump
-    if (input.isJustPressed) {
-      play("jump");
-      //bird.vy = -2 * sqrt(difficulty);
-      bird.isJumping = true;
-    }
-  }
-  color("black");
+    color("black");
 
   //Select correct sprite, jumping = b or falling = a
-  char(bird.vy < 0 ? "b" : "a", bird.pos);
-  nextFloorDist -= scoreModifier;
-  //Create floor
-  if (nextFloorDist < 0) {
-    const width = rnd(40, 80);
-    /*
-    floors.push({
-      pos: vec(200 + width / 2, rndi(30, 90)),
-      width,
-      hasChick: true,
-    });
-    */
-    nextFloorDist += width + rnd(10, 30);
-  }
+  char(snakeHead.vy < 0 ? "b" : "a", snakeHead.pos);
 
-  remove(floors, (f) => {
-    f.pos.x -= scoreModifier;
-    color("light_yellow");
-
-    //Collision with yellow platform
-    const c = box(f.pos, f.width, 4).isColliding.rect;
-    if (bird.vy > 0 && c.white) {
-      bird.pos.y = f.pos.y - 5;
-      bird.isJumping = false;
-      bird.vy = 0;
-    }
-
-    //If a platform has a chick
-    /*
-    if (f.hasChick) {
-      color("black");
-      const c = char("c", f.pos.x, f.pos.y - 5).isColliding.char;
-
-      //Pick it up if you touch it (and you have < 30)
-      if (c.a || c.b) {
-        if (chicks.length < 30) {
-          chicks.push({ index: 0, targetIndex: 0 });
-        }
-        play("select");
-        addScore(chicks.length, f.pos.x, f.pos.y - 5);
-        f.hasChick = false;
-      }
-    }
-    */
-    return f.pos.x < -f.width / 2;
-  });
-  // if (Math.random() < 0.001) {
-  //   color("black");
-  //   console.log("Triggered");
-  //   const c = char("c", VIEW_X + 50, rnd(10, VIEW_Y - 10)).isColliding.char;
-  //   spawnedChicks.push(c);
-  //   console.log(spawnedChicks);
-  //   //Pick it up if you touch it (and you have < 30)
-  //   if (c.a || c.b) {
-  //     if (chicks.length < 30) {
-  //       chicks.push({ index: 0, targetIndex: 0 });
-  //     }
-  //     play("select");
-
-  //     //
-  //   }
-  // }
-
-  nextChickDist -= scoreModifier;
-  if (nextChickDist < 0) {
-    spawnedChicks.push({ pos: vec(203, rndi(10, 90)), vx: rnd(1, difficulty) * 0.3 });
-    nextChickDist += rnd(50, 80) / sqrt(difficulty);
+  nextFoodDist -= scoreModifier;
+  if (nextFoodDist < 0) {
+    spawnedsnakeTails.push({ pos: vec(203, rndi(10, 90)), vx: rnd(1, difficulty) * 0.3 });
+    nextFoodDist += rnd(50, 80) / sqrt(difficulty);
   }
   color("black");
-  //cleaning up chicks  and handling chick collision, and moving
-  remove(spawnedChicks, (chick) => {
+  //cleaning up snakeTails and moving
+  remove(spawnedsnakeTails, (food) => {
     //update bullet position by velocity
-    chick.pos.x -= chick.vx + scoreModifier;
+    food.pos.x -= food.vx + scoreModifier;
 
-    const c = char("c", chick.pos).isColliding.char;
+    const c = char("c", food.pos).isColliding.char;
     if (c.a || c.b) {
-      if (chicks.length < 30) {
-          chicks.push({ index: 0, targetIndex: 0 });
+      if (snakeTails.length < 30) {
+          snakeTails.push({ index: 0, targetIndex: 0 });
       }
       play("select");
-      addScore(chicks.length, chick.pos.x, chick.pos.y - 5);
+      addScore(snakeTails.length, food.pos.x, food.pos.y - 5);
       return true;
     }
-    return chick.pos.x < -3;
+    return food.pos.x < -3;
   });
  
 
-  //Causes chicks to follow behind you
-  bird.posHistory.forEach((p) => {
+  //Causes snakeTails to follow behind you
+  snakeHead.posHistory.forEach((p) => {
     p.x -= .65;
   });
 
-  //Add birds position to vector history, dont let history be longer than 99 entries
-  bird.posHistory.unshift(vec(bird.pos));
-  if (bird.posHistory.length > 99) {
-    bird.posHistory.pop();
+  //Add snakeHeads position to vector history, dont let history be longer than 99 entries
+  snakeHead.posHistory.unshift(vec(snakeHead.pos));
+  if (snakeHead.posHistory.length > 99) {
+    snakeHead.posHistory.pop();
   }
   color("transparent");
-
-  //Set isJumping to true if player falls off platform
-  if (!bird.isJumping) {
-    if (!box(bird.pos.x, bird.pos.y + 4, 9, 2).isColliding.rect.light_yellow) {
-      bird.isJumping = true;
-    }
-  }
 
   //Bullet spawning
   nextBulletDist -= scoreModifier;
@@ -229,7 +135,7 @@ function update() {
     nextBulletDist += rnd(50, 80) / sqrt(difficulty);
   }
   color("black");
-  //cleaning up bullets  and handling bullet collision, and moving
+  //cleaning up bullets and handling bullet collision, and moving
   remove(bullets, (b) => {
     //update bullet position by velocity
     b.pos.x -= b.vx + scoreModifier;
@@ -237,9 +143,9 @@ function update() {
     const c = char("d", b.pos).isColliding.char;
     if (c.a || c.b) {
       play("explosion");
-      if (chicks.length > 0) {
+      if (snakeTails.length > 0) {
         isFalling = true;
-        bird.vy = 3 * sqrt(difficulty);
+        snakeHead.vy = 3 * sqrt(difficulty);
       } else {
         end();
       }
@@ -251,36 +157,36 @@ function update() {
   let isHit = isFalling;
   isFalling = false;
 
-  remove(chicks, (c, i) => {
+  remove(snakeTails, (c, i) => {
     c.targetIndex = 3 * (i + 1);
     c.index += (c.targetIndex - c.index) * 0.05;
-    const p = bird.posHistory[floor(c.index)];
+    const p = snakeHead.posHistory[floor(c.index)];
     const cl = char("c", p).isColliding;
-    //If a chick gets hit by a bullet
+    //If a food gets hit by a bullet
     if (cl.char.d) {
       play("powerUp");
       isHit = true;
     }
 
-    //Add chick to fallingChicks array
+    //Add food to fallingsnakeTails array
     if (isHit) {
       console.log("Triggered");
-      fallingChicks.push({ pos: vec(p), vy: 0 });
+      fallingsnakeTails.push({ pos: vec(p), vy: 0 });
       return true;
     }
   });
 
-  //Remove chick when they fall off screen
-  remove(fallingChicks, (f) => {
+  //Remove food when they fall off screen
+  remove(fallingsnakeTails, (f) => {
     f.vy += 0.3 * difficulty;
     f.pos.y += f.vy;
     char("c", f.pos, { mirror: { y: -1 } });
     return f.pos.y > 103;
   });
   color("black");
-  char(bird.vy < 0 ? "b" : "a", bird.pos);
+  char(snakeHead.vy < 0 ? "b" : "a", snakeHead.pos);
 
-  if (bird.pos.y > VIEW_Y - 1) {
+  if (snakeHead.pos.y > VIEW_Y - 1) {
     play("explosion");
     end();
   }
