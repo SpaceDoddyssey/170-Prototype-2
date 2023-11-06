@@ -33,6 +33,20 @@ rrrr l
 rrrr l
  rrr l
 `,
+  `
+ggGRG
+ggGGG
+ggGGG
+ggGGG
+ggGRG
+`,
+  `
+ggGRG
+ggGGG
+ggGGGr
+ggGGG
+ggGRG
+`,
 ];
 const VIEW_X = 150;
 const VIEW_Y = 150;
@@ -43,13 +57,18 @@ options = {
   seed: 50,
 };
 
-/** @type {{pos: Vector, turnCenter: Vector, vy: number, posHistory: Vector[], angle: number}} */
-let snakeHead;
-/** @type {{index: number, targetIndex: number}[]} */
-let snakeTails;
-/** @type {{pos: Vector, vy: number}[]} */
-let fallingsnakeTails;
+/** @type {{pos: Vector, turnCenter: Vector, vy: number, posHistory: Vector[], angle: number, tails : {index: number, targetIndex: number}[], fallingTails :{pos: Vector, vy: number}[], isHit: boolean, angularSpeed: number}}*/
+let snakeHead1;
 
+/** @type {{pos: Vector, turnCenter: Vector, vy: number, posHistory: Vector[], angle: number, tails : {index: number, targetIndex: number}[], fallingTails :{pos: Vector, vy: number}[], isHit: boolean, angularSpeed: number}}*/
+let snakeHead2;
+
+/* 
+/** @type {{index: number, targetIndex: number}[]} 
+let snakeTails;
+/** @type {{pos: Vector, vy: number}[]} 
+let fallingsnakeTails;
+*/
 /** @type {{pos: Vector, vx: number}[]} */
 let bullets;
 /** @type {{pos: Vector, vx: number}[]} */
@@ -59,51 +78,59 @@ let nextBulletDist;
 let nextFoodDist;
 
 let movingUp = false;
-let angularSpeed = 0.04;
+let DEFAULT_ANGULAR_SPEED = 0.04;
 let radius = 16;
+
+const BOX_SIZE = 40;
 
 function update() {
   //Initializer function
   if (!ticks) {
-    snakeHead = { pos: vec(64, 32), turnCenter: vec(64+radius, 32), vy: 0, posHistory: [], angle: 0 };
-    snakeTails = [];
-    fallingsnakeTails = [];
+    create_snakes();
+
     spawnedFood = [];
     bullets = [];
     nextBulletDist = 99;
     nextFoodDist = 80;
   }
 
+  //Create both squares where player input will be checked for
+  color("light_blue");
+  rect(0, VIEW_Y - BOX_SIZE, BOX_SIZE, BOX_SIZE);
+
+  color("light_red");
+  rect(VIEW_X - BOX_SIZE, VIEW_Y - BOX_SIZE, BOX_SIZE, BOX_SIZE);
+
   const scoreModifier = sqrt(difficulty);
 
   //Flip the turning direction of the snake when you press the button
-  if (input.isJustPressed) { 
-    const deltaX = snakeHead.pos.x - snakeHead.turnCenter.x;
-    const deltaY = snakeHead.pos.y - snakeHead.turnCenter.y;
-  
-    const newTurnCenterX = snakeHead.pos.x + deltaX;
-    const newTurnCenterY = snakeHead.pos.y + deltaY;
-  
-    snakeHead.turnCenter.x = newTurnCenterX;
-    snakeHead.turnCenter.y = newTurnCenterY;
-
-    // Reverse the angle to keep snakeHead.pos in the same place
-    snakeHead.angle = Math.atan2(snakeHead.pos.y - snakeHead.turnCenter.y, snakeHead.pos.x - snakeHead.turnCenter.x);
-    angularSpeed = -angularSpeed;
+  if (input.isJustPressed) {
+    let x = input.pos.x;
+    let y = input.pos.y;
+    if (0 < x && x < BOX_SIZE && y > VIEW_Y - BOX_SIZE) {
+      changeSnakeDirection(snakeHead1);
+      snakeHead1.angularSpeed = -snakeHead1.angularSpeed;
+    }
+    if (x > VIEW_X - BOX_SIZE && y > VIEW_Y - BOX_SIZE) {
+      changeSnakeDirection(snakeHead2);
+      snakeHead2.angularSpeed = -snakeHead2.angularSpeed;
+    }
   }
-  
-  snakeHead.angle += angularSpeed;
-  snakeHead.pos.x = snakeHead.turnCenter.x + radius * Math.cos(snakeHead.angle);
-  snakeHead.pos.y = snakeHead.turnCenter.y + radius * Math.sin(snakeHead.angle);
 
+  updateSnakeAngleAndDirection(snakeHead1);
+  updateSnakeAngleAndDirection(snakeHead2);
 
   //Select correct sprite, jumping = b or falling = a
-  char(snakeHead.vy < 0 ? "b" : "a", snakeHead.pos);
+  char(snakeHead1.vy < 0 ? "b" : "a", snakeHead1.pos);
+  char(snakeHead2.vy < 0 ? "f" : "e", snakeHead2.pos);
 
   nextFoodDist -= scoreModifier;
-  if (nextFoodDist < 0) {
-    spawnedFood.push({ pos: vec(rndi(10, 140), rndi(10, 140)), vx: rnd(1, difficulty) * 0.3 });
-    nextFoodDist += rnd(50, 80) / sqrt(difficulty);
+  if (nextFoodDist < 0 && spawnedFood.length < 20) {
+    spawnedFood.push({
+      pos: vec(rndi(10, 140), rndi(10, 140)),
+      vx: rnd(1, difficulty) * 0.3,
+    });
+    nextFoodDist = rnd(50, 80) / sqrt(difficulty);
   }
   color("black");
   // cleaning up snakeTails and moving
@@ -111,82 +138,152 @@ function update() {
     //update bullet position by velocity
 
     const c = char("c", food.pos).isColliding.char;
+
+    //Snake 1 collision
     if (c.a || c.b) {
-      if (snakeTails.length < 30) {
-          snakeTails.push({ index: 0, targetIndex: 0 });
-      }
-      play("select");
-      addScore(snakeTails.length, food.pos.x, food.pos.y - 5);
-      return true;
+      return handleSnakeCollision(snakeHead1, food);
     }
+    if (c.e || c.f) {
+      return handleSnakeCollision(snakeHead2, food);
+    }
+
+    //Snake 2 collision
+
     return food.pos.x < -3;
   });
 
   //Add snakeHeads position to vector history, dont let history be longer than 99 entries
-  snakeHead.posHistory.unshift(vec(snakeHead.pos));
-  if (snakeHead.posHistory.length > 99) {
-    snakeHead.posHistory.pop();
-  }
+  updateSnakePositionHistory(snakeHead1);
+  updateSnakePositionHistory(snakeHead2);
+
+  //Unsure if two lines below are needed - Wyatt
   color("transparent");
-
-  //Bullet spawning
-  // nextBulletDist -= scoreModifier;
-  // if (nextBulletDist < 0) {
-  //   bullets.push({ pos: vec(203, rndi(10, 90)), vx: rnd(1, difficulty) * 0.3 });
-  //   nextBulletDist += rnd(50, 80) / sqrt(difficulty);
-  // }
   color("black");
+
   //cleaning up bullets and handling bullet collision, and moving
-  let isHit = false;
-  remove(bullets, (bullet) => {
-    //update bullet position by velocity
-    bullet.pos.x -= bullet.vx + scoreModifier;
+  snakeHead1.isHit = false;
+  snakeHead2.isHit = false;
 
-    const c = char("d", bullet.pos).isColliding.char;
-    if (c.a || c.b) {
-      play("explosion");
-      if (snakeTails.length > 0) {
-        isHit = true;
-        snakeHead.vy = 3 * sqrt(difficulty);
-      } else {
-        end();
-      }
-      return true;
-    }
-    return bullet.pos.x < -3;
-  });
   color("black");
 
-  remove(snakeTails, (tail, i) => {
+  handleSnakeTail(snakeHead1);
+  handleSnakeTail(snakeHead2);
+
+  color("black");
+
+  //Redraw head ontop of tails
+  char(snakeHead1.vy < 0 ? "b" : "a", snakeHead1.pos);
+  char(snakeHead2.vy < 0 ? "f" : "e", snakeHead2.pos);
+
+  handleSnakeOutOfBounds(snakeHead1);
+  handleSnakeOutOfBounds(snakeHead2);
+}
+
+//-----------------------------------
+//----------FUNCTIONS----------------
+//-----------------------------------
+
+function create_snakes() {
+  snakeHead1 = {
+    pos: vec(80, 64),
+    turnCenter: vec(80 + radius, 64),
+    vy: 0,
+    posHistory: [],
+    angle: 0,
+    tails: [],
+    fallingTails: [],
+    isHit: false,
+    angularSpeed: DEFAULT_ANGULAR_SPEED,
+  };
+  snakeHead2 = {
+    pos: vec(20, 80),
+    turnCenter: vec(20 + radius, 80),
+    vy: 0,
+    posHistory: [],
+    angle: 0,
+    tails: [],
+    fallingTails: [],
+    isHit: false,
+    angularSpeed: -DEFAULT_ANGULAR_SPEED,
+  };
+}
+function changeSnakeDirection(snake) {
+  const deltaX = snake.pos.x - snake.turnCenter.x;
+  const deltaY = snake.pos.y - snake.turnCenter.y;
+
+  const newTurnCenterX = snake.pos.x + deltaX;
+  const newTurnCenterY = snake.pos.y + deltaY;
+
+  snake.turnCenter.x = newTurnCenterX;
+  snake.turnCenter.y = newTurnCenterY;
+
+  // Reverse the angle to keep snakeHead.pos in the same place
+  snake.angle = Math.atan2(
+    snake.pos.y - snake.turnCenter.y,
+    snake.pos.x - snake.turnCenter.x
+  );
+}
+
+function updateSnakeAngleAndDirection(snake) {
+  snake.angle += snake.angularSpeed;
+  snake.pos.x = snake.turnCenter.x + radius * Math.cos(snake.angle);
+  snake.pos.y = snake.turnCenter.y + radius * Math.sin(snake.angle);
+}
+
+function updateSnakePositionHistory(snake) {
+  snake.posHistory.unshift(vec(snake.pos));
+  if (snake.posHistory.length > 99) {
+    snake.posHistory.pop();
+  }
+}
+
+function handleSnakeCollision(snake, food) {
+  ///////////////
+  if (snake.tails.length < 30) {
+    snake.tails.push({ index: 0, targetIndex: 0 });
+  }
+  play("select");
+  addScore(snake.tails.length, food.pos.x, food.pos.y - 5);
+  return true;
+}
+
+function handleSnakeTail(snake) {
+  remove(snake.tails, (tail, i) => {
     tail.targetIndex = 3 * (i + 1);
     tail.index += (tail.targetIndex - tail.index) * 0.05;
-    const p = snakeHead.posHistory[floor(tail.index)];
+    const p = snake.posHistory[floor(tail.index)];
     const cl = char("c", p).isColliding;
     //If a tail segment gets hit by a bullet
     if (cl.char.d) {
       play("powerUp");
-      isHit = true;
+      snake.isHit = true;
     }
 
     //Add tail segment to fallingsnakeTails array
-    if (isHit) {
+    if (snake.isHit) {
       console.log("Triggered");
-      fallingsnakeTails.push({ pos: vec(p), vy: 0 });
+      snake.fallingTails.push({ pos: vec(p), vy: 0 });
       return true;
     }
   });
+}
 
-  //Remove food when they fall off screen
-  remove(fallingsnakeTails, (tail) => {
+function handleTailFalling(snake) {
+  remove(snake.fallingTails, (tail) => {
     tail.vy += 0.3 * difficulty;
     tail.pos.y += tail.vy;
     char("c", tail.pos, { mirror: { y: -1 } });
     return tail.pos.y > 103;
   });
-  color("black");
-  char(snakeHead.vy < 0 ? "b" : "a", snakeHead.pos);
+}
 
-  if (snakeHead.pos.y > VIEW_Y - 1) {
+function handleSnakeOutOfBounds(snake) {
+  if (
+    snake.pos.y > VIEW_Y + 5 ||
+    snake.pos.y < -5 ||
+    snake.pos.x < -5 ||
+    snake.pos.x > VIEW_X + 5
+  ) {
     play("explosion");
     end();
   }
