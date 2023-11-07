@@ -121,8 +121,7 @@ function update() {
   updateSnakeAngleAndDirection(snakeHead2);
 
   //Select correct sprite, jumping = b or falling = a
-  char(snakeHead1.vy < 0 ? "b" : "a", snakeHead1.pos);
-  char(snakeHead2.vy < 0 ? "f" : "e", snakeHead2.pos);
+  drawSnakeHeads();
 
   nextFoodDist -= scoreModifier;
   if (nextFoodDist < 0 && spawnedFood.length < 20) {
@@ -172,8 +171,7 @@ function update() {
   color("black");
 
   //Redraw head ontop of tails
-  char(snakeHead1.vy < 0 ? "b" : "a", snakeHead1.pos);
-  char(snakeHead2.vy < 0 ? "f" : "e", snakeHead2.pos);
+  drawSnakeHeads();
 
   handleSnakeOutOfBounds(snakeHead1);
   handleSnakeOutOfBounds(snakeHead2);
@@ -287,4 +285,17 @@ function handleSnakeOutOfBounds(snake) {
     play("explosion");
     end();
   }
+}
+
+function drawSnakeHeads() {
+  char(snakeHead1.vy < 0 ? "b" : "a", snakeHead1.pos, {
+    rotation:
+      (snakeHead1.angle / Math.PI) * 2 +
+      1 * (snakeHead1.angularSpeed / Math.abs(snakeHead1.angularSpeed)),
+  });
+  char(snakeHead2.vy < 0 ? "f" : "e", snakeHead2.pos, {
+    rotation:
+      (snakeHead2.angle / Math.PI) * 2 +
+      1 * (snakeHead2.angularSpeed / Math.abs(snakeHead2.angularSpeed)),
+  });
 }
