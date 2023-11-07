@@ -48,8 +48,8 @@ ggGGG
 ggGRG
 `,
 ];
-const VIEW_X = 150;
-const VIEW_Y = 150;
+const VIEW_X = 300;
+const VIEW_Y = 300;
 options = {
   viewSize: { x: VIEW_X, y: VIEW_Y },
   isPlayingBgm: true,
@@ -127,7 +127,7 @@ function update() {
   nextFoodDist -= scoreModifier;
   if (nextFoodDist < 0 && spawnedFood.length < 20) {
     spawnedFood.push({
-      pos: vec(rndi(10, 140), rndi(10, 140)),
+      pos: vec(rndi(10, VIEW_X-10), rndi(10, VIEW_Y-10)),
       vx: rnd(1, difficulty) * 0.3,
     });
     nextFoodDist = rnd(50, 80) / sqrt(difficulty);
