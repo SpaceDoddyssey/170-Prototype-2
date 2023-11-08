@@ -59,7 +59,7 @@ options = {
   viewSize: { x: VIEW_X, y: VIEW_Y },
   isPlayingBgm: true,
   isReplayEnabled: true,
-  seed: 50,
+  seed: 82,
 };
 
 /** @type {{pos: Vector, turnCenter: Vector, vy: number, posHistory: Vector[], angle: number, tails : {index: number, targetIndex: number}[], fallingTails :{pos: Vector, vy: number}[], isHit: boolean, angularSpeed: number}}*/
