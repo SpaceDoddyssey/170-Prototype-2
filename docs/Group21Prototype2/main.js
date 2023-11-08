@@ -26,12 +26,10 @@ gggg
  gg
 `,
   `
- rrr l
-rrrr l
-rrrr l
-rrrr l
-rrrr l
- rrr l
+ gg 
+gRRg
+gRRg
+ gg
 `,
   `
 ggGRG
@@ -50,15 +48,8 @@ ggGRG
 
   `
  gg 
-gggg
-gggg
- gg
-`,
-  ,
-  `
- gg 
-gggg
-gggg
+gbbg
+gbbg
  gg
 `,
 ];
@@ -141,9 +132,11 @@ function update() {
   if (nextFoodDist < 0 && spawnedFood.length < 20) {
     spawnedFood.push({
       pos: vec(rndi(10, VIEW_X - 10), rndi(10, VIEW_Y - 10)),
+      //pos: vec(60, 60),
       vx: rnd(1, difficulty) * 0.3,
     });
     nextFoodDist = rnd(50, 80) / sqrt(difficulty);
+    //nextFoodDist = 0;
   }
   color("black");
   // cleaning up snakeTails and moving
@@ -183,7 +176,7 @@ function update() {
   //   handleSnakeTail(snakeHead2, "h");
 
   handleSnakeTail(snakeHead1, "g");
-  handleSnakeTail(snakeHead2, "c");
+  handleSnakeTail(snakeHead2, "d");
 
   color("black");
 
@@ -269,10 +262,10 @@ function handleSnakeTail(snake, skin) {
     const p = snake.posHistory[floor(tail.index)];
     const cl = char(skin, p).isColliding;
     //If a tail segment gets hit by a bullet
-    if (cl.char.d) {
-      play("powerUp");
-      snake.isHit = true;
-    }
+    // if (cl.char.d) {
+    //   play("powerUp");
+    //   snake.isHit = true;
+    // }
     //Check snake1 collision with h
     checkTailCollision(cl, skin);
 
@@ -291,7 +284,7 @@ function checkTailCollision(cl, skin) {
     endGame();
   }
   //Vice versa
-  if (skin == "c" && cl.char.a) {
+  if (skin == "d" && cl.char.a) {
     endGame();
   }
 }
