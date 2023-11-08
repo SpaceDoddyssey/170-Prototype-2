@@ -47,6 +47,20 @@ ggGGGr
 ggGGG
 ggGRG
 `,
+
+  `
+ gg 
+gggg
+gggg
+ gg
+`,
+  ,
+  `
+ gg 
+gggg
+gggg
+ gg
+`,
 ];
 const VIEW_X = 300;
 const VIEW_Y = 300;
@@ -126,7 +140,7 @@ function update() {
   nextFoodDist -= scoreModifier;
   if (nextFoodDist < 0 && spawnedFood.length < 20) {
     spawnedFood.push({
-      pos: vec(rndi(10, VIEW_X-10), rndi(10, VIEW_Y-10)),
+      pos: vec(rndi(10, VIEW_X - 10), rndi(10, VIEW_Y - 10)),
       vx: rnd(1, difficulty) * 0.3,
     });
     nextFoodDist = rnd(50, 80) / sqrt(difficulty);
@@ -165,8 +179,11 @@ function update() {
 
   color("black");
 
-  handleSnakeTail(snakeHead1);
-  handleSnakeTail(snakeHead2);
+  //   handleSnakeTail(snakeHead1, "g");
+  //   handleSnakeTail(snakeHead2, "h");
+
+  handleSnakeTail(snakeHead1, "g");
+  handleSnakeTail(snakeHead2, "c");
 
   color("black");
 
@@ -245,17 +262,19 @@ function handleSnakeCollision(snake, food) {
   return true;
 }
 
-function handleSnakeTail(snake) {
+function handleSnakeTail(snake, skin) {
   remove(snake.tails, (tail, i) => {
     tail.targetIndex = 3 * (i + 1);
     tail.index += (tail.targetIndex - tail.index) * 0.05;
     const p = snake.posHistory[floor(tail.index)];
-    const cl = char("c", p).isColliding;
+    const cl = char(skin, p).isColliding;
     //If a tail segment gets hit by a bullet
     if (cl.char.d) {
       play("powerUp");
       snake.isHit = true;
     }
+    //Check snake1 collision with h
+    checkTailCollision(cl, skin);
 
     //Add tail segment to fallingsnakeTails array
     if (snake.isHit) {
@@ -266,11 +285,22 @@ function handleSnakeTail(snake) {
   });
 }
 
+function checkTailCollision(cl, skin) {
+  //Check if the snake with skin g is colliding with tail e (tail of the other snake)
+  if (skin == "g" && cl.char.e) {
+    endGame();
+  }
+  //Vice versa
+  if (skin == "c" && cl.char.a) {
+    endGame();
+  }
+}
+
 function handleTailFalling(snake) {
   remove(snake.fallingTails, (tail) => {
     tail.vy += 0.3 * difficulty;
     tail.pos.y += tail.vy;
-    char("c", tail.pos, { mirror: { y: -1 } });
+    char("g", tail.pos, { mirror: { y: -1 } });
     return tail.pos.y > 103;
   });
 }
@@ -282,8 +312,7 @@ function handleSnakeOutOfBounds(snake) {
     snake.pos.x < -5 ||
     snake.pos.x > VIEW_X + 5
   ) {
-    play("explosion");
-    end();
+    endGame();
   }
 }
 
@@ -298,4 +327,9 @@ function drawSnakeHeads() {
       (snakeHead2.angle / Math.PI) * 2 +
       1 * (snakeHead2.angularSpeed / Math.abs(snakeHead2.angularSpeed)),
   });
+}
+
+function endGame() {
+  play("explosion");
+  end();
 }
