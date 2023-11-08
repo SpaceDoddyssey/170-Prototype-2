@@ -34,11 +34,11 @@ rrrr l
  rrr l
 `,
   `
-ggGRG
-ggGGG
-ggGGG
-ggGGG
-ggGRG
+RRGRG
+RRGGG
+RRGGG
+RRGGG
+RRGRG
 `,
   `
 ggGRG
@@ -56,14 +56,14 @@ gggg
 `,
   ,
   `
- gg 
-gggg
-gggg
- gg
+ RR
+RRRR
+RRRR
+ RR
 `,
 ];
-const VIEW_X = 300;
-const VIEW_Y = 300;
+const VIEW_X = 200;
+const VIEW_Y = 200;
 options = {
   viewSize: { x: VIEW_X, y: VIEW_Y },
   isPlayingBgm: true,
@@ -200,8 +200,8 @@ function update() {
 
 function create_snakes() {
   snakeHead1 = {
-    pos: vec(80, 64),
-    turnCenter: vec(80 + radius, 64),
+    pos: vec(0, 0), //Initializing this does nothing
+    turnCenter: vec(64, 64),
     vy: 0,
     posHistory: [],
     angle: 0,
@@ -211,8 +211,8 @@ function create_snakes() {
     angularSpeed: DEFAULT_ANGULAR_SPEED,
   };
   snakeHead2 = {
-    pos: vec(20, 80),
-    turnCenter: vec(20 + radius, 80),
+    pos: vec(0, 0), 
+    turnCenter: vec(VIEW_X-64, 80),
     vy: 0,
     posHistory: [],
     angle: 0,
