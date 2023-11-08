@@ -32,11 +32,11 @@ gRRg
  gg
 `,
   `
-ggGRG
-ggGGG
-ggGGG
-ggGGG
-ggGRG
+ggRrR
+ggRRR
+ggRRR
+ggRRR
+ggRrR
 `,
   `
 ggGRG
@@ -158,7 +158,6 @@ function update() {
     return food.pos.x < -3;
   });
 
-  //Add snakeHeads position to vector history, dont let history be longer than 99 entries
   updateSnakePositionHistory(snakeHead1);
   updateSnakePositionHistory(snakeHead2);
 
@@ -193,8 +192,8 @@ function update() {
 
 function create_snakes() {
   snakeHead1 = {
-    pos: vec(80, 64),
-    turnCenter: vec(80 + radius, 64),
+    pos: vec(0, 0), //Initializing this does nothing
+    turnCenter: vec(64, 64),
     vy: 0,
     posHistory: [],
     angle: 0,
@@ -204,8 +203,8 @@ function create_snakes() {
     angularSpeed: DEFAULT_ANGULAR_SPEED,
   };
   snakeHead2 = {
-    pos: vec(20, 80),
-    turnCenter: vec(20 + radius, 80),
+    pos: vec(0, 0),
+    turnCenter: vec(VIEW_X - 64, 80),
     vy: 0,
     posHistory: [],
     angle: 0,
@@ -240,9 +239,6 @@ function updateSnakeAngleAndDirection(snake) {
 
 function updateSnakePositionHistory(snake) {
   snake.posHistory.unshift(vec(snake.pos));
-  if (snake.posHistory.length > 99) {
-    snake.posHistory.pop();
-  }
 }
 
 function handleSnakeCollision(snake, food) {
