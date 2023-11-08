@@ -84,6 +84,7 @@ let nextFoodDist;
 
 let movingUp = false;
 let DEFAULT_ANGULAR_SPEED = 0.04;
+let STARTING_LENGTH = 5;
 let radius = 16;
 
 const BOX_SIZE = 40;
@@ -97,6 +98,12 @@ function update() {
     bullets = [];
     nextBulletDist = 99;
     nextFoodDist = 80;
+
+    //Give snakes starting length
+  }
+  if (ticks < STARTING_LENGTH) {
+    snakeHead1.tails.push({ index: 0, targetIndex: 0 });
+    snakeHead2.tails.push({ index: 0, targetIndex: 0 });
   }
 
   //Create both squares where player input will be checked for
