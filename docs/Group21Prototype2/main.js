@@ -306,11 +306,12 @@ function handleTailFalling(snake) {
 }
 
 function handleSnakeOutOfBounds(snake) {
+  const LEEWAY = 15;
   if (
-    snake.pos.y > VIEW_Y + 5 ||
-    snake.pos.y < -5 ||
-    snake.pos.x < -5 ||
-    snake.pos.x > VIEW_X + 5
+    snake.pos.y > VIEW_Y + LEEWAY ||
+    snake.pos.y < -LEEWAY ||
+    snake.pos.x < -LEEWAY ||
+    snake.pos.x > VIEW_X + LEEWAY
   ) {
     endGame();
   }
