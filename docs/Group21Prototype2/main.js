@@ -62,8 +62,8 @@ gggg
  gg
 `,
 ];
-const VIEW_X = 300;
-const VIEW_Y = 300;
+const VIEW_X = 200;
+const VIEW_Y = 200;
 options = {
   viewSize: { x: VIEW_X, y: VIEW_Y },
   isPlayingBgm: true,
