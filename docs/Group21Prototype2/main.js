@@ -243,9 +243,9 @@ function updateSnakePositionHistory(snake) {
 
 function handleSnakeCollision(snake, food) {
   ///////////////
-  if (snake.tails.length < 30) {
-    snake.tails.push({ index: 0, targetIndex: 0 });
-  }
+
+  snake.tails.push({ index: 0, targetIndex: 0 });
+
   play("select");
   addScore(snake.tails.length, food.pos.x, food.pos.y - 5);
   return true;
@@ -257,12 +257,7 @@ function handleSnakeTail(snake, skin) {
     tail.index += (tail.targetIndex - tail.index) * 0.05;
     const p = snake.posHistory[floor(tail.index)];
     const cl = char(skin, p).isColliding;
-    //If a tail segment gets hit by a bullet
-    // if (cl.char.d) {
-    //   play("powerUp");
-    //   snake.isHit = true;
-    // }
-    //Check snake1 collision with h
+    //Check snake collision
     checkTailCollision(cl, skin);
 
     //Add tail segment to fallingsnakeTails array
