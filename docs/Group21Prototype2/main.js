@@ -87,6 +87,9 @@ let DEFAULT_ANGULAR_SPEED = 0.04;
 let STARTING_LENGTH = 5;
 let radius = 16;
 
+let scoreMultiplier = 1;
+let whoseTurn = 0;
+
 const BOX_SIZE = 40;
 
 function update() {
@@ -113,8 +116,6 @@ function update() {
   color("light_red");
   rect(VIEW_X - BOX_SIZE, VIEW_Y - BOX_SIZE, BOX_SIZE, BOX_SIZE);
 
-  const scoreModifier = sqrt(difficulty);
-
   //Flip the turning direction of the snake when you press the button
   if (input.isJustPressed) {
     let x = input.pos.x;
@@ -135,7 +136,7 @@ function update() {
   //Select correct sprite, jumping = b or falling = a
   drawSnakeHeads();
 
-  nextFoodDist -= scoreModifier;
+  nextFoodDist -= sqrt(difficulty);
   if (nextFoodDist < 0 && spawnedFood.length < 20) {
     spawnedFood.push({
       pos: vec(rndi(10, VIEW_X - 10), rndi(10, VIEW_Y - 10)),
@@ -254,8 +255,18 @@ function handleSnakeCollision(snake, food) {
   snake.tails.push({ index: 0, targetIndex: 0 });
 
   play("select");
-  addScore(snake.tails.length, food.pos.x, food.pos.y - 5);
+  increaseScore(snake, food);
   return true;
+}
+
+function increaseScore(snake, food){
+  if((whoseTurn == 1 && snake == snakeHead2) || (whoseTurn == 2 && snake == snakeHead1)){
+    scoreMultiplier -= 5;
+    if(scoreMultiplier < 1){ scoreMultiplier = 1}
+  }
+  whoseTurn = (snake == snakeHead1 ? 2 : 1);
+  addScore(scoreMultiplier, food.pos.x, food.pos.y - 5);
+  scoreMultiplier++;
 }
 
 function handleSnakeTail(snake, skin) {
